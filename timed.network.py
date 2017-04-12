@@ -46,7 +46,7 @@ def loader(filename = "FB/facebook-wosn-links/out.facebook-wosn-links.txt", size
     Outputs:
         An RXN array containing the edges of the given file. Rows are edges, co-
             lumns are source, target, weight, time respectively.
-    * We are missing to do anything with the
+    * We are missing to do anything with the weight
     """
     # This part makes sure the entrance lines are cleared off.
     with open(filename) as myfile:
@@ -77,3 +77,62 @@ def loader(filename = "FB/facebook-wosn-links/out.facebook-wosn-links.txt", size
             clear_mat = np.array([next(f).strip().split(' ') for i in xrange(lines-contador+1)], int)
 
     return clear_mat
+
+def create_adj(col_array, plot_all = False, undirected = True):
+    """
+    Inputs:
+        col_array: column array containing the edges. It may contain extra info
+            from weights and edge-stamp respectively (4 columns)
+        plot_all: True- creates a matrix with a column/row for every node within
+            the range, whether or not it is connected. False- It only creates a
+            matrix with those nodes that are connected (degree centrality >=1).
+        Undirected: True- makes the matrix to be symmetric. False- Makes a matrix
+            that is not necessarily connected.
+
+    Outputs:
+        Returns a sparse lil_matrix representing the network
+    """
+    m,n = np.shape(col_array)
+
+    if undirected == True:
+
+        if plot_all == True:
+            tam = max([max(col_array[:,0]), max(col_array[:,1])])
+            adjacency = sp.lil_matrix((tam,tam))
+
+            for i in xrange(m):
+                adjacency[col_array[i,0] - 1, col_array[i,1] - 1] = 1.
+                adjacency[col_array[i,1] - 1, col_array[i,0] - 1] = 1.
+
+        elif plot_all == False:
+            conjunto = set(col_array[:,0]).union(col_array[:,1])
+            tam = len(conjunto)
+            adjacency = sp.lil_matrix((tam,tam))
+            listado = sorted(conjunto)
+
+            for i in xrange(m):
+                source = listado.index(col_array[i,0])
+                target = listado.index(col_array[i,1])
+                adjacency[source, target] = 1.
+                adjacency[target, source] = 1.
+
+    elif undirected == False:
+        if plot_all == True:
+            tam = max([max(col_array[:,0]), max(col_array[:,1])])
+            adjacency = sp.lil_matrix((tam,tam))
+
+            for i in xrange(m):
+                adjacency[col_array[i,0] - 1, col_array[i,1] - 1] = 1.
+
+        else:
+            conjunto = set(col_array[:,0]).union(col_array[:,1])
+            tam = len(conjunto)
+            adjacency = sp.lil_matrix((tam,tam))
+            listado = sorted(conjunto)
+
+            for i in xrange(m):
+                source = listado.index(col_array[i,0])
+                target = listado.index(col_array[i,1])
+                adjacency[source, target] = 1.
+
+    return adjacency
