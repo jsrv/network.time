@@ -61,7 +61,6 @@ def loader(filename = "FB/facebook-wosn-links/out.facebook-wosn-links.txt", size
             break
 
     this = counter(filename)
-ti
 
     # Number of Edges
     if size == False or size > this: # it makes sure that it either does the whole network or the size that you are looking for
@@ -72,13 +71,9 @@ ti
     with open(filename, "r") as f:
         for i in xrange(contador):
             secon = next(f).strip().split(' ') # you are loosing your first line
-        clear_mat = np.array([next(f).strip().split(' ') for i in xrange(lines-contador+1)], int)
-
-        # clear_mat = np.array([i.strip().split(' ') for i in f if int(i.strip().split(' ')[3])>from_ and int(i.strip().split(' ')[3]) < to_], int)
-
-    if contador == 2:
-        nodes = int(secon[2]) #Get the nodes by means of sometimes
-    else:
-        nodes = 0
+        if timed == True:
+            clear_mat = np.array([i.strip().split(' ') for i in f if int(i.strip().split(' ')[3])>from_ and int(i.strip().split(' ')[3]) < to_], int)
+        else:
+            clear_mat = np.array([next(f).strip().split(' ') for i in xrange(lines-contador+1)], int)
 
     return clear_mat
