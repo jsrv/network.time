@@ -23,7 +23,7 @@ from plotly.graph_objs import *
 
 def counter(filename):
     """
-    Determines the number of nodes in the
+    Determines the number of nodes in the filename added
     """
     f = open(filename, "r+")
     buf = mmap.mmap(f.fileno(), 0)
@@ -46,6 +46,7 @@ def loader(filename = "FB/facebook-wosn-links/out.facebook-wosn-links.txt", size
     Outputs:
         An RXN array containing the edges of the given file. Rows are edges, co-
             lumns are source, target, weight, time respectively.
+
     * We are missing to do anything with the weight
     """
     # This part makes sure the entrance lines are cleared off.
@@ -78,11 +79,11 @@ def loader(filename = "FB/facebook-wosn-links/out.facebook-wosn-links.txt", size
 
     return clear_mat
 
-def create_adj(col_array, plot_all = False, undirected = True):
+def create_adj(edges, plot_all = False, undirected = True):
     """
     Inputs:
-        col_array: column array containing the edges. It may contain extra info
-            from weights and edge-stamp respectively (4 columns)
+        edges: column array containing the edges. It may contain extra info
+            from weights and edge-stamp respectively (4 columns).
         plot_all: True- creates a matrix with a column/row for every node within
             the range, whether or not it is connected. False- It only creates a
             matrix with those nodes that are connected (degree centrality >=1).
@@ -90,49 +91,169 @@ def create_adj(col_array, plot_all = False, undirected = True):
             that is not necessarily connected.
 
     Outputs:
-        Returns a sparse lil_matrix representing the network
+        Returns a sparse lil_matrix representing the network.
     """
-    m,n = np.shape(col_array)
+    m,n = np.shape(edges)
 
     if undirected == True:
 
         if plot_all == True:
-            tam = max([max(col_array[:,0]), max(col_array[:,1])])
+            tam = max([max(edges[:,0]), max(edges[:,1])])
             adjacency = sp.lil_matrix((tam,tam))
 
             for i in xrange(m):
-                adjacency[col_array[i,0] - 1, col_array[i,1] - 1] = 1.
-                adjacency[col_array[i,1] - 1, col_array[i,0] - 1] = 1.
+                adjacency[edges[i,0] - 1, edges[i,1] - 1] = 1.
+                adjacency[edges[i,1] - 1, edges[i,0] - 1] = 1.
 
         elif plot_all == False:
-            conjunto = set(col_array[:,0]).union(col_array[:,1])
+            conjunto = set(edges[:,0]).union(edges[:,1])
             tam = len(conjunto)
             adjacency = sp.lil_matrix((tam,tam))
             listado = sorted(conjunto)
 
             for i in xrange(m):
-                source = listado.index(col_array[i,0])
-                target = listado.index(col_array[i,1])
+                source = listado.index(edges[i,0])
+                target = listado.index(edges[i,1])
                 adjacency[source, target] = 1.
                 adjacency[target, source] = 1.
 
     elif undirected == False:
         if plot_all == True:
-            tam = max([max(col_array[:,0]), max(col_array[:,1])])
+            tam = max([max(edges[:,0]), max(edges[:,1])])
             adjacency = sp.lil_matrix((tam,tam))
 
             for i in xrange(m):
-                adjacency[col_array[i,0] - 1, col_array[i,1] - 1] = 1.
+                adjacency[edges[i,0] - 1, edges[i,1] - 1] = 1.
 
         else:
-            conjunto = set(col_array[:,0]).union(col_array[:,1])
+            conjunto = set(edges[:,0]).union(edges[:,1])
             tam = len(conjunto)
             adjacency = sp.lil_matrix((tam,tam))
             listado = sorted(conjunto)
 
             for i in xrange(m):
-                source = listado.index(col_array[i,0])
-                target = listado.index(col_array[i,1])
+                source = listado.index(edges[i,0])
+                target = listado.index(edges[i,1])
                 adjacency[source, target] = 1.
 
     return adjacency
+
+def netx_plot(edges, plot_all = False, undirected = True):
+    """
+    Inputs:
+        edges: column array containing the edges. It may contain extra info
+            from weights and edge-stamp respectively (4 columns).
+        plot_all: True- creates a matrix with a column/row for every node within
+            the range, whether or not it is connected. False- It only creates a
+            matrix with those nodes that are connected (degree centrality >=1).
+        undirected: True- makes the matrix to be symmetric. False- Makes a matrix
+            that is not necessarily connected.
+
+    Outputs:
+        Plots a Networkx graph based on the conditions given.
+    """
+
+    if undirected:
+        G = nx.Graph()
+        if plot_all:
+            tam = max([max(edges[:,0]), max(edges[:,1])])
+            G.add_nodes_from(xrange(tam))
+        G.add_edges_from(edges)
+        bet_c = nx.betweenness_centrality(G)
+        pos = nx.spring_layout(G)
+        nx.draw_networkx(G, pos=pos, with_labels=False, node_size=35, alpha=.7, node_color = bet_c.values(), width = .5,cmap=plt.cm.YlOrRd)
+        plt.show()
+
+    else:
+        dG = nx.DiGraph()
+        if plot_all:
+            tam = max([max(edges[:,0]), max(edges[:,1])])
+            dG.add_nodes_from(xrange(tam))
+        dG.add_edges_from(edges)
+        bet_c = nx.betweenness_centrality(dG)
+        pos = nx.spring_layout(dG)
+        nx.draw_networkx(G, pos=pos, with_labels=False, node_size=35, alpha=.7, node_color = bet_c.values(), width = .5,cmap=plt.cm.YlOrRd)
+        plt.show()
+
+
+def plotly_3d():
+    Edges = clear_mat
+    G = ig.Graph(Edges, directed=False)
+
+    layt = G.layout('kk', dim=3)
+    N = num_of_nodes
+    labels = listado
+
+    Xn=[layt[k][0] for k in xrange(N)]# x-coordinates of nodes
+    Yn=[layt[k][1] for k in xrange(N)]# y-coordinates
+    Zn=[layt[k][2] for k in xrange(N)]# z-coordinates
+    Xe=[]
+    Ye=[]
+    Ze=[]
+    for e in Edges:
+        Xe+=[layt[e[0]][0],layt[e[1]][0], None]# x-coordinates of edge ends
+        Ye+=[layt[e[0]][1],layt[e[1]][1], None]
+        Ze+=[layt[e[0]][2],layt[e[1]][2], None]
+
+    trace1=Scatter3d(x=Xe,
+                   y=Ye,
+                   z=Ze,
+                   mode='lines',
+                   line=Line(color='rgb(125,125,125)', width=1),
+                   hoverinfo='none'
+                   )
+    trace2=Scatter3d(x=Xn,
+                   y=Yn,
+                   z=Zn,
+                   mode='markers',
+                   name='actors',
+                   marker=Marker(symbol='dot',
+                                 size=6,
+                                 color=group,
+                                 colorscale='Viridis',
+                                 line=Line(color='rgb(50,50,50)', width=0.5)
+                                 ),
+                   text=labels,
+                   hoverinfo='text'
+                   )
+    axis=dict(showbackground=False,
+            showline=False,
+            zeroline=False,
+            showgrid=False,
+            showticklabels=False,
+            title=''
+            )
+    layout = Layout(
+         title="Network of coappearances of characters in Victor Hugo's novel<br> Les Miserables (3D visualization)",
+         width=1000,
+         height=1000,
+         showlegend=False,
+         scene=Scene(
+         xaxis=XAxis(axis),
+         yaxis=YAxis(axis),
+         zaxis=ZAxis(axis),
+        ),
+     margin=Margin(
+        t=100
+        ),
+        hovermode='closest',
+        annotations=Annotations([
+           Annotation(
+           showarrow=False,
+            text="Data source: <a href='http://bost.ocks.org/mike/miserables/miserables.json'>[1]</a>",
+            xref='paper',
+            yref='paper',
+            x=0,
+            y=0.1,
+            xanchor='left',
+            yanchor='bottom',
+            font=Font(
+            size=14
+            )
+            )
+        ]),    )
+
+    data=Data([trace1, trace2])
+    fig=Figure(data=data, layout=layout)
+
+    py.iplot(fig, filename='Les-Miserables')
