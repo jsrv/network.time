@@ -3,9 +3,9 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 import mmap
-from scipy import sparse as sp
 import time
 import plotly.plotly as py
+from scipy import sparse as sp
 from plotly.graph_objs import *
 
 """
@@ -160,7 +160,7 @@ def netx_plot(edges, plot_all = False, undirected = True, pos_ = False):
             G.add_nodes_from(xrange(tam))
         G.add_edges_from(edges)
         bet_c = nx.betweenness_centrality(G)
-        pos = nx.spring_layout(G, pos=pos_)            
+        pos = nx.spring_layout(G, pos=pos_)
         nx.draw_networkx(G, pos=pos, with_labels=False, node_size=35, alpha=.7, node_color = bet_c.values(), width = .5,cmap=plt.cm.YlOrRd)
         plt.show()
 
@@ -174,7 +174,6 @@ def netx_plot(edges, plot_all = False, undirected = True, pos_ = False):
         pos = nx.spring_layout(dG)
         nx.draw_networkx(dG, pos=pos, with_labels=False, node_size=35, alpha=.7, node_color = bet_c.values(), width = .5,cmap=plt.cm.YlOrRd)
         plt.show()
-
 
 def plotly_3d():
     Edges = clear_mat
@@ -259,5 +258,6 @@ def plotly_3d():
     py.iplot(fig, filename='Les-Miserables')
 
 if __name__ == '__main__':
+    # practice problems for the plotter
     edges = loader(filename = "subelj_euroroad/out.subelj_euroroad_euroroad.txt", size = 500)
     netx_plot(edges, undirected = False)
